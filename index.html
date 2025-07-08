@@ -293,7 +293,8 @@
         async function initializeFirebase() {
             try {
                 // Check if firebaseConfig is properly filled
-                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                // Removed the "YOUR_API_KEY" check here as it's now filled
+                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
                     console.error("Firebase config is missing or incomplete. Cannot initialize Firebase.");
                     document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (ขาดการตั้งค่า)";
                     return;
