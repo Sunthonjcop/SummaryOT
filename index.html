@@ -271,22 +271,30 @@
         window.auth = null;
         window.userId = null;
         window.isFirebaseInitialized = false;
-const firebaseConfig = {
-  apiKey: "AIzaSyBq3ewj-MZJ8bTw3XniUz-YShGgRahGD70",
-  authDomain: "summaryot-ce6cb.firebaseapp.com",
-  projectId: "summaryot-ce6cb",
-  storageBucket: "summaryot-ce6cb.firebasestorage.app",
-  messagingSenderId: "197272976667",
-  appId: "1:197272976667:web:27182869f7232ea41de7be",
-  measurementId: "G-83NRY6HVVZ"
-};
+
+        // Firebase Configuration (YOUR ACTUAL Firebase config)
+        // IMPORTANT: DO NOT share your API Key publicly if this is a real application.
+        // For this personal tool, it's generally acceptable.
+        const firebaseConfig = {
+          apiKey: "AIzaSyBq3ewj-MZJ8bTw3XniUz-YShGgRahGD70",
+          authDomain: "summaryot-ce6cb.firebaseapp.com",
+          projectId: "summaryot-ce6cb",
+          storageBucket: "summaryot-ce6cb.firebasestorage.app",
+          messagingSenderId: "197272976667",
+          appId: "1:197272976667:web:27182869f7232ea41de7be",
+          measurementId: "G-83NRY6HVVZ"
+        };
+        // We will use Project ID as the appId for data storage path
         const appId = firebaseConfig.projectId;
+        // initialAuthToken is null when running on GitHub Pages
         const initialAuthToken = null;
+
         // Initialize Firebase and authenticate
         async function initializeFirebase() {
             try {
-                if (Object.keys(firebaseConfig).length === 0) {
-                    console.error("Firebase config is missing. Cannot initialize Firebase.");
+                // Check if firebaseConfig is properly filled
+                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    console.error("Firebase config is missing or incomplete. Cannot initialize Firebase.");
                     document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (ขาดการตั้งค่า)";
                     return;
                 }
@@ -483,11 +491,11 @@ const firebaseConfig = {
                                 <td id="earnings1_5" class="py-3 px-6 text-right">0.00</td>
                             </tr>
                             <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">โอที 2 แรง</td>
+                                <td class="py-3 px-6 text-right">โอที 2 แรง</td>
                                 <td id="earnings2" class="py-3 px-6 text-right">0.00</td>
                             </tr>
                             <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">โอที 3 แรง</td>
+                                <td class="py-3 px-6 text-right">โอที 3 แรง</td>
                                 <td id="earnings3" class="py-3 px-6 text-right">0.00</td>
                             </tr>
                             <tr class="border-t border-gray-200">
@@ -529,7 +537,7 @@ const firebaseConfig = {
                                 <td id="totalIncomeOtEarnings" class="py-3 px-6 text-right">0.00</td>
                             </tr>
                             <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">เบี้ยขยัน</td>
+                                <td class="py-3 px-6 text-right whitespace-nowrap">เบี้ยขยัน</td>
                                 <td class="py-3 px-6 text-right">
                                     <input type="number" id="attendanceBonusInput" class="summary-table-input" value="0" min="0" step="10">
                                 </td>
@@ -618,23 +626,37 @@ const firebaseConfig = {
         window.loadOtData = async function() {
             if (!window.isFirebaseInitialized || !window.userId) {
                 console.log("Firebase not initialized or userId not available yet.");
+                // Keep loading overlay if Firebase isn't ready
                 return;
             }
             loadingOverlay.style.display = 'flex'; // Show loading overlay
+            loadingOverlay.textContent = 'กำลังโหลดข้อมูล...'; // Ensure text is correct
             try {
-                const docRef = window.doc(window.db, `artifacts/${__app_id}/users/${window.userId}/otTrackerData/mainData`);
+                // Use the global 'appId' variable here
+                const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
                 const docSnap = await window.getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    otData = docSnap.data().data || {}; // Load the 'data' field
+                    const loadedData = docSnap.data();
+                    otData = loadedData.data || {}; // Load the 'data' field
+                    // Also load salary, attendanceBonus, regularMealAllowance if saved
+                    salaryInput.value = loadedData.salary !== undefined ? loadedData.salary : 16000;
+                    attendanceBonusInput.value = loadedData.attendanceBonus !== undefined ? loadedData.attendanceBonus : 0;
+                    regularMealAllowanceInput.value = loadedData.regularMealAllowance !== undefined ? loadedData.regularMealAllowance : 0;
+
                     console.log("Data loaded from Firestore:", otData);
                 } else {
-                    console.log("No existing data found in Firestore for this user.");
+                    console.log("No existing data found in Firestore for this user. Resetting inputs.");
                     otData = {};
+                    // Reset inputs to default if no data
+                    salaryInput.value = 16000;
+                    attendanceBonusInput.value = 0;
+                    regularMealAllowanceInput.value = 0;
                 }
             } catch (error) {
                 console.error("Error loading data from Firestore:", error);
                 // Display error to user if needed
+                loadingOverlay.textContent = `ข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`;
             } finally {
                 loadingOverlay.style.display = 'none'; // Hide loading overlay
                 // Always render and update summary after attempting to load
@@ -652,15 +674,22 @@ const firebaseConfig = {
             loadingOverlay.style.display = 'flex'; // Show saving overlay
             loadingOverlay.textContent = 'กำลังบันทึกข้อมูล...';
             try {
-                const docRef = window.doc(window.db, `artifacts/${__app_id}/users/${window.userId}/otTrackerData/mainData`);
-                await window.setDoc(docRef, { data: otData }, { merge: true }); // Save the entire otData object
+                // Use the global 'appId' variable here
+                const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
+                // Save otData, salary, attendanceBonus, regularMealAllowance
+                await window.setDoc(docRef, {
+                    data: otData,
+                    salary: parseFloat(salaryInput.value) || 0,
+                    attendanceBonus: parseFloat(attendanceBonusInput.value) || 0,
+                    regularMealAllowance: parseFloat(regularMealAllowanceInput.value) || 0
+                }, { merge: true }); // Save the entire otData object
                 console.log("Data saved to Firestore successfully.");
             } catch (error) {
                 console.error("Error saving data to Firestore:", error);
                 // Display error to user if needed
             } finally {
                 loadingOverlay.style.display = 'none'; // Hide saving overlay
-                loadingOverlay.textContent = 'กำลังโหลดข้อมูล...'; // Reset text
+                loadingOverlay.textContent = 'กำลังโหลดข้อมูล...'; // Reset text for next load
             }
         }
 
@@ -1064,11 +1093,21 @@ const firebaseConfig = {
         });
 
         // Salary input change handler (recalculate earnings when salary changes)
-        salaryInput.addEventListener('input', updateSummary); // No await saveOtData here, as it's frequent input
-
+        salaryInput.addEventListener('input', async () => {
+            updateSummary();
+            await saveOtData(); // Save data when salary changes
+        });
+        
         // New event listeners for attendance bonus and regular meal allowance inputs
-        attendanceBonusInput.addEventListener('input', updateSummary); // No await saveOtData here
-        regularMealAllowanceInput.addEventListener('input', updateSummary); // No await saveOtData here
+        attendanceBonusInput.addEventListener('input', async () => {
+            updateSummary();
+            await saveOtData(); // Save data when attendance bonus changes
+        });
+        regularMealAllowanceInput.addEventListener('input', async () => {
+            updateSummary();
+            await saveOtData(); // Save data when regular meal allowance changes
+        });
+
 
         // Initial render and summary update is now handled by Firebase initialization success
         // renderCalendar(); // Removed, called by loadOtData
