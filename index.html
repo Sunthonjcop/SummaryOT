@@ -271,12 +271,17 @@
         window.auth = null;
         window.userId = null;
         window.isFirebaseInitialized = false;
-
-        // Ensure __app_id and __firebase_config are defined by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
+const firebaseConfig = {
+  apiKey: "AIzaSyBq3ewj-MZJ8bTw3XniUz-YShGgRahGD70",
+  authDomain: "summaryot-ce6cb.firebaseapp.com",
+  projectId: "summaryot-ce6cb",
+  storageBucket: "summaryot-ce6cb.firebasestorage.app",
+  messagingSenderId: "197272976667",
+  appId: "1:197272976667:web:27182869f7232ea41de7be",
+  measurementId: "G-83NRY6HVVZ"
+};
+        const appId = firebaseConfig.projectId;
+        const initialAuthToken = null;
         // Initialize Firebase and authenticate
         async function initializeFirebase() {
             try {
