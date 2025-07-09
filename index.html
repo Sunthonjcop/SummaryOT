@@ -170,7 +170,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(255, 255, 255, 0.8);
-            display: flex;
+            display: flex; /* Changed to flex by default in CSS */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -249,6 +249,17 @@
         }
     </style>
     <script type="module">
+        // Global error handler to catch any uncaught JavaScript errors
+        window.onerror = function(message, source, lineno, colno, error) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.backgroundColor = 'rgba(255, 200, 200, 0.9)'; // Reddish background for error
+                loadingOverlay.innerHTML = `<p style="color: red; font-weight: bold;">ข้อผิดพลาดร้ายแรง:</p><p style="color: red;">${message}</p><p style="font-size: 1rem;">(บรรทัด ${lineno} ใน ${source.substring(source.lastIndexOf('/') + 1)})</p><p style="font-size: 1rem;">โปรดตรวจสอบการตั้งค่า Firebase หรือโค้ด.</p>`;
+                loadingOverlay.style.display = 'flex';
+            }
+            return true; // Prevent default browser error handling (console logging)
+        };
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
