@@ -202,6 +202,8 @@
             font-size: 1.5rem;
             color: #2b6cb0;
             border-radius: 1.5rem;
+            text-align: center; /* Center text for messages */
+            padding: 20px; /* Add padding for readability */
         }
 
         /* Responsive adjustments for overall layout */
@@ -291,12 +293,18 @@
 
         // Initialize Firebase and authenticate
         async function initializeFirebase() {
+            console.log("Firebase: เริ่มต้นการทำงาน initializeFirebase...");
+            document.getElementById('loadingOverlay').textContent = "กำลังเริ่มต้น Firebase...";
             try {
-                // Check if firebaseConfig is properly filled
-                // Removed the "YOUR_API_KEY" check here as it's now filled
-                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
-                    console.error("Firebase config is missing or incomplete. Cannot initialize Firebase.");
-                    document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (ขาดการตั้งค่า)";
+                // ตรวจสอบว่า firebaseConfig ถูกต้องและมี apiKey
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_API_KEY")) {
+                    console.error("Firebase: ข้อผิดพลาด - apiKey ไม่ถูกต้องหรือไม่ได้ระบุ.");
+                    document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (apiKey ไม่ถูกต้อง)";
+                    return;
+                }
+                if (!firebaseConfig.projectId) {
+                    console.error("Firebase: ข้อผิดพลาด - projectId ไม่ถูกต้องหรือไม่ได้ระบุ.");
+                    document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (projectId ไม่ถูกต้อง)";
                     return;
                 }
 
@@ -304,15 +312,21 @@
                 window.db = getFirestore(window.firebaseApp);
                 window.auth = getAuth(window.firebaseApp);
 
+                console.log("Firebase: Firebase App และ Firestore, Auth initialized.");
+                document.getElementById('loadingOverlay').textContent = "กำลังยืนยันตัวตน...";
+
                 // Listen for auth state changes
                 onAuthStateChanged(window.auth, async (user) => {
                     if (user) {
                         window.userId = user.uid;
                         window.isFirebaseInitialized = true;
-                        console.log("Firebase initialized and user authenticated:", window.userId);
+                        console.log("Firebase: ยืนยันตัวตนสำเร็จ. User ID:", window.userId);
+                        document.getElementById('loadingOverlay').textContent = "กำลังโหลดข้อมูล...";
                         await window.loadOtData(); // Load data once authenticated
                         document.getElementById('loadingOverlay').style.display = 'none'; // Hide loading overlay
                     } else {
+                        console.log("Firebase: ไม่พบผู้ใช้. กำลังพยายามลงชื่อเข้าใช้แบบไม่ระบุตัวตน...");
+                        document.getElementById('loadingOverlay').textContent = "กำลังลงชื่อเข้าใช้...";
                         // Sign in anonymously if no user is found
                         try {
                             if (initialAuthToken) {
@@ -321,13 +335,13 @@
                                 await signInAnonymously(window.auth);
                             }
                         } catch (error) {
-                            console.error("Firebase authentication failed:", error);
+                            console.error("Firebase: ข้อผิดพลาดในการยืนยันตัวตน:", error);
                             document.getElementById('loadingOverlay').textContent = `ข้อผิดพลาดในการยืนยันตัวตน: ${error.message}`;
                         }
                     }
                 });
             } catch (error) {
-                console.error("Error initializing Firebase:", error);
+                console.error("Firebase: ข้อผิดพลาดในการเริ่มต้น Firebase ทั้งหมด:", error);
                 document.getElementById('loadingOverlay').textContent = `ข้อผิดพลาดในการเริ่มต้น Firebase: ${error.message}`;
             }
         }
@@ -625,8 +639,9 @@
 
         // Function to load OT data from Firestore
         window.loadOtData = async function() {
+            console.log("loadOtData: กำลังโหลดข้อมูล...");
             if (!window.isFirebaseInitialized || !window.userId) {
-                console.log("Firebase not initialized or userId not available yet.");
+                console.log("loadOtData: Firebase ยังไม่พร้อมหรือ User ID ไม่มี. จะไม่โหลดข้อมูล.");
                 // Keep loading overlay if Firebase isn't ready
                 return;
             }
@@ -635,6 +650,7 @@
             try {
                 // Use the global 'appId' variable here
                 const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
+                console.log("loadOtData: พยายามดึงเอกสารจาก:", docRef.path);
                 const docSnap = await window.getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -645,21 +661,25 @@
                     attendanceBonusInput.value = loadedData.attendanceBonus !== undefined ? loadedData.attendanceBonus : 0;
                     regularMealAllowanceInput.value = loadedData.regularMealAllowance !== undefined ? loadedData.regularMealAllowance : 0;
 
-                    console.log("Data loaded from Firestore:", otData);
+                    console.log("loadOtData: โหลดข้อมูลจาก Firestore สำเร็จ:", otData);
+                    loadingOverlay.textContent = "โหลดข้อมูลสำเร็จ!";
                 } else {
-                    console.log("No existing data found in Firestore for this user. Resetting inputs.");
+                    console.log("loadOtData: ไม่พบข้อมูลเดิมใน Firestore สำหรับผู้ใช้นี้. จะรีเซ็ตค่า.");
                     otData = {};
                     // Reset inputs to default if no data
                     salaryInput.value = 16000;
                     attendanceBonusInput.value = 0;
                     regularMealAllowanceInput.value = 0;
+                    loadingOverlay.textContent = "ไม่พบข้อมูลเดิม.";
                 }
             } catch (error) {
-                console.error("Error loading data from Firestore:", error);
-                // Display error to user if needed
+                console.error("loadOtData: ข้อผิดพลาดในการโหลดข้อมูลจาก Firestore:", error);
                 loadingOverlay.textContent = `ข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`;
             } finally {
-                loadingOverlay.style.display = 'none'; // Hide loading overlay
+                // Delay hiding for a brief moment to show success/error message
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 1000); // Hide after 1 second
                 // Always render and update summary after attempting to load
                 renderCalendar();
                 updateSummary();
@@ -668,8 +688,11 @@
 
         // Function to save OT data to Firestore
         async function saveOtData() {
+            console.log("saveOtData: กำลังบันทึกข้อมูล...");
             if (!window.isFirebaseInitialized || !window.userId) {
-                console.warn("Firebase not initialized or userId not available. Data will not be saved.");
+                console.warn("saveOtData: Firebase ยังไม่พร้อมหรือ User ID ไม่มี. จะไม่บันทึกข้อมูล.");
+                loadingOverlay.textContent = "ไม่สามารถบันทึกได้ (Firebase ไม่พร้อม)";
+                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1000);
                 return;
             }
             loadingOverlay.style.display = 'flex'; // Show saving overlay
@@ -677,20 +700,24 @@
             try {
                 // Use the global 'appId' variable here
                 const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
-                // Save otData, salary, attendanceBonus, regularMealAllowance
-                await window.setDoc(docRef, {
+                const dataToSave = {
                     data: otData,
                     salary: parseFloat(salaryInput.value) || 0,
                     attendanceBonus: parseFloat(attendanceBonusInput.value) || 0,
                     regularMealAllowance: parseFloat(regularMealAllowanceInput.value) || 0
-                }, { merge: true }); // Save the entire otData object
-                console.log("Data saved to Firestore successfully.");
+                };
+                console.log("saveOtData: พยายามบันทึกเอกสารไปที่:", docRef.path, "ข้อมูล:", dataToSave);
+                await window.setDoc(docRef, dataToSave, { merge: true }); // Save the entire otData object
+                console.log("saveOtData: บันทึกข้อมูลไปที่ Firestore สำเร็จ.");
+                loadingOverlay.textContent = "บันทึกข้อมูลสำเร็จ!";
             } catch (error) {
-                console.error("Error saving data to Firestore:", error);
-                // Display error to user if needed
+                console.error("saveOtData: ข้อผิดพลาดในการบันทึกข้อมูลไปที่ Firestore:", error);
+                loadingOverlay.textContent = `ข้อผิดพลาดในการบันทึก: ${error.message}`;
             } finally {
-                loadingOverlay.style.display = 'none'; // Hide saving overlay
-                loadingOverlay.textContent = 'กำลังโหลดข้อมูล...'; // Reset text for next load
+                // Delay hiding for a brief moment to show success/error message
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 1000); // Hide after 1 second
             }
         }
 
