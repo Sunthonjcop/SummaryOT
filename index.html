@@ -196,6 +196,7 @@
             height: 100%;
             background-color: rgba(255, 255, 255, 0.8);
             display: flex;
+            flex-direction: column; /* Stack text vertically */
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -204,7 +205,21 @@
             border-radius: 1.5rem;
             text-align: center; /* Center text for messages */
             padding: 20px; /* Add padding for readability */
+            gap: 10px; /* Space between text lines */
         }
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
 
         /* Responsive adjustments for overall layout */
         @media (max-width: 768px) {
@@ -275,36 +290,52 @@
         window.isFirebaseInitialized = false;
 
         // Firebase Configuration (YOUR ACTUAL Firebase config)
-        // IMPORTANT: DO NOT share your API Key publicly if this is a real application.
-        // For this personal tool, it's generally acceptable.
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ขั้นตอนสำคัญ: วาง Firebase Config ของคุณที่นี่ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        // 1. เข้าสู่ Firebase Console: https://console.firebase.google.com/
+        // 2. เลือกโปรเจกต์ของคุณ (SummaryOT)
+        // 3. ไปที่ Project settings (ไอคอนรูปฟันเฟืองด้านบนซ้าย)
+        // 4. เลื่อนลงไปที่ส่วน "Your apps"
+        // 5. คลิกที่ไอคอน "</>" (Web) เพื่อเพิ่มแอปบนเว็บ (ถ้ายังไม่มี) หรือเลือกแอปเว็บที่มีอยู่
+        // 6. คัดลอกโค้ด JavaScript snippet ที่ Firebase ให้มา (เฉพาะส่วน const firebaseConfig = { ... };)
+        // 7. วางโค้ดนั้นลงไปแทนที่บล็อก firebaseConfig ด้านล่างนี้ทั้งหมด
+        //    (รวมถึง measurementId ถ้ามี)
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         const firebaseConfig = {
-          apiKey: "AIzaSyBq3ewj-MZJ8bTw3XniUz-YShGgRahGD70",
-          authDomain: "summaryot-ce6cb.firebaseapp.com",
-          projectId: "summaryot-ce6cb",
-          storageBucket: "summaryot-ce6cb.firebasestorage.app",
-          messagingSenderId: "197272976667",
-          appId: "1:197272976667:web:27182869f7232ea41de7be",
-          measurementId: "G-83NRY6HVVZ"
-        };
-        // We will use Project ID as the appId for data storage path
-        const appId = firebaseConfig.projectId;
-        // initialAuthToken is null when running on GitHub Pages
+          apiKey: "AIzaSyBq3ewj-MZJ8bTw3XniUz-YShGgRahGD70", // ตัวอย่าง: "AIzaSyC..."
+          authDomain: "summaryot-ce6cb.firebaseapp.com", // ตัวอย่าง: "your-project-id.firebaseapp.com"
+          projectId: "summaryot-ce6cb", // ตัวอย่าง: "your-project-id"
+          storageBucket: "summaryot-ce6cb.firebasestorage.app", // ตัวอย่าง: "your-project-id.appspot.com"
+          messagingSenderId: "197272976667", // ตัวอย่าง: "1234567890"
+          appId: "1:197272976667:web:27182869f7232ea41de7be", // ตัวอย่าง: "1:1234567890:web:abcdef1234567890"
+          measurementId: "G-83NRY6HVVZ" };
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+        // เราจะใช้ Project ID เป็น appId สำหรับพาธการจัดเก็บข้อมูลใน Firestore
+        // และใช้ชื่อที่กำหนดเองเพื่อให้ง่ายต่อการอ้างอิงในกฎ Firestore
+        const appId = firebaseConfig.projectId || "ot-tracker-app-default"; // ใช้ projectId หรือชื่อ default
+        // initialAuthToken เป็น null เมื่อรันบน GitHub Pages
         const initialAuthToken = null;
 
         // Initialize Firebase and authenticate
         async function initializeFirebase() {
             console.log("Firebase: เริ่มต้นการทำงาน initializeFirebase...");
-            document.getElementById('loadingOverlay').textContent = "กำลังเริ่มต้น Firebase...";
+            document.getElementById('loadingOverlay').innerHTML = '<div class="loading-spinner"></div><p>กำลังเริ่มต้น Firebase...</p>';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
             try {
                 // ตรวจสอบว่า firebaseConfig ถูกต้องและมี apiKey
                 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_API_KEY")) {
-                    console.error("Firebase: ข้อผิดพลาด - apiKey ไม่ถูกต้องหรือไม่ได้ระบุ.");
-                    document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (apiKey ไม่ถูกต้อง)";
+                    const msg = "ข้อผิดพลาด: Firebase config ไม่ถูกต้อง (apiKey ไม่ได้ระบุหรือเป็นค่าเริ่มต้น).";
+                    console.error("Firebase:", msg);
+                    document.getElementById('loadingOverlay').innerHTML = `<p>${msg}</p>`;
                     return;
                 }
-                if (!firebaseConfig.projectId) {
-                    console.error("Firebase: ข้อผิดพลาด - projectId ไม่ถูกต้องหรือไม่ได้ระบุ.");
-                    document.getElementById('loadingOverlay').textContent = "ข้อผิดพลาด: ไม่สามารถเชื่อมต่อ Firebase ได้ (projectId ไม่ถูกต้อง)";
+                if (!firebaseConfig.projectId || firebaseConfig.projectId.includes("YOUR_PROJECT_ID")) {
+                    const msg = "ข้อผิดพลาด: Firebase config ไม่ถูกต้อง (projectId ไม่ได้ระบุหรือเป็นค่าเริ่มต้น).";
+                    console.error("Firebase:", msg);
+                    document.getElementById('loadingOverlay').innerHTML = `<p>${msg}</p>`;
                     return;
                 }
 
@@ -313,7 +344,7 @@
                 window.auth = getAuth(window.firebaseApp);
 
                 console.log("Firebase: Firebase App และ Firestore, Auth initialized.");
-                document.getElementById('loadingOverlay').textContent = "กำลังยืนยันตัวตน...";
+                document.getElementById('loadingOverlay').innerHTML = '<div class="loading-spinner"></div><p>กำลังยืนยันตัวตน...</p>';
 
                 // Listen for auth state changes
                 onAuthStateChanged(window.auth, async (user) => {
@@ -321,12 +352,12 @@
                         window.userId = user.uid;
                         window.isFirebaseInitialized = true;
                         console.log("Firebase: ยืนยันตัวตนสำเร็จ. User ID:", window.userId);
-                        document.getElementById('loadingOverlay').textContent = "กำลังโหลดข้อมูล...";
+                        document.getElementById('loadingOverlay').innerHTML = '<div class="loading-spinner"></div><p>กำลังโหลดข้อมูล...</p>';
                         await window.loadOtData(); // Load data once authenticated
-                        document.getElementById('loadingOverlay').style.display = 'none'; // Hide loading overlay
+                        // Loading overlay will be hidden by loadOtData's finally block
                     } else {
                         console.log("Firebase: ไม่พบผู้ใช้. กำลังพยายามลงชื่อเข้าใช้แบบไม่ระบุตัวตน...");
-                        document.getElementById('loadingOverlay').textContent = "กำลังลงชื่อเข้าใช้...";
+                        document.getElementById('loadingOverlay').innerHTML = '<div class="loading-spinner"></div><p>กำลังลงชื่อเข้าใช้...</p>';
                         // Sign in anonymously if no user is found
                         try {
                             if (initialAuthToken) {
@@ -336,13 +367,15 @@
                             }
                         } catch (error) {
                             console.error("Firebase: ข้อผิดพลาดในการยืนยันตัวตน:", error);
-                            document.getElementById('loadingOverlay').textContent = `ข้อผิดพลาดในการยืนยันตัวตน: ${error.message}`;
+                            document.getElementById('loadingOverlay').innerHTML = `<p>ข้อผิดพลาดในการยืนยันตัวตน: ${error.message}</p>`;
+                            setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 3000); // Hide after 3 seconds
                         }
                     }
                 });
             } catch (error) {
                 console.error("Firebase: ข้อผิดพลาดในการเริ่มต้น Firebase ทั้งหมด:", error);
-                document.getElementById('loadingOverlay').textContent = `ข้อผิดพลาดในการเริ่มต้น Firebase: ${error.message}`;
+                document.getElementById('loadingOverlay').innerHTML = `<p>ข้อผิดพลาดในการเริ่มต้น Firebase: ${error.message}</p>`;
+                setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 3000); // Hide after 3 seconds
             }
         }
 
@@ -358,7 +391,8 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center p-4 min-h-screen">
     <div class="loading-overlay" id="loadingOverlay">
-        กำลังโหลดข้อมูล...
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลดข้อมูล...</p>
     </div>
 
     <div class="container bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full">
@@ -595,7 +629,7 @@
         // otData now stores an object for each day, containing shift and an array of OT entries
         let otData = {}; // {'YYYY-MM-DD': {shift: 'Day' | 'Night' | null, entries: [{hours: 4, rate: 1.5}, {hours: 3, rate: 2}]}}
         let selectedOtRate = null; // Stores the currently selected OT rate (1.5, 2, or 3)
-        let selectedShift = null; // Stores the currently selected shift ('Day' or 'Night')
+        let selectedShift = null; // Stores the currently selected shift ('Day' | 'Night' | null)
 
         // DOM Elements
         const calendarEl = document.getElementById('calendar');
@@ -648,11 +682,13 @@
             console.log("loadOtData: กำลังโหลดข้อมูล...");
             if (!window.isFirebaseInitialized || !window.userId) {
                 console.log("loadOtData: Firebase ยังไม่พร้อมหรือ User ID ไม่มี. จะไม่โหลดข้อมูล.");
-                // Keep loading overlay if Firebase isn't ready
+                loadingOverlay.innerHTML = '<p>Firebase ยังไม่พร้อม. กำลังรอ...</p>';
+                loadingOverlay.style.display = 'flex';
+                // Do not hide overlay immediately, wait for Firebase init
                 return;
             }
             loadingOverlay.style.display = 'flex'; // Show loading overlay
-            loadingOverlay.textContent = 'กำลังโหลดข้อมูล...'; // Ensure text is correct
+            loadingOverlay.innerHTML = '<div class="loading-spinner"></div><p>กำลังโหลดข้อมูล...</p>';
             try {
                 // Use the global 'appId' variable here
                 const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
@@ -668,7 +704,7 @@
                     regularMealAllowanceInput.value = loadedData.regularMealAllowance !== undefined ? loadedData.regularMealAllowance : 0;
 
                     console.log("loadOtData: โหลดข้อมูลจาก Firestore สำเร็จ:", otData);
-                    loadingOverlay.textContent = "โหลดข้อมูลสำเร็จ!";
+                    loadingOverlay.innerHTML = '<p>โหลดข้อมูลสำเร็จ!</p>';
                 } else {
                     console.log("loadOtData: ไม่พบข้อมูลเดิมใน Firestore สำหรับผู้ใช้นี้. จะรีเซ็ตค่า.");
                     otData = {};
@@ -676,16 +712,16 @@
                     salaryInput.value = 16000;
                     attendanceBonusInput.value = 0;
                     regularMealAllowanceInput.value = 0;
-                    loadingOverlay.textContent = "ไม่พบข้อมูลเดิม.";
+                    loadingOverlay.innerHTML = '<p>ไม่พบข้อมูลเดิม.</p>';
                 }
             } catch (error) {
                 console.error("loadOtData: ข้อผิดพลาดในการโหลดข้อมูลจาก Firestore:", error);
-                loadingOverlay.textContent = `ข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`;
+                loadingOverlay.innerHTML = `<p>ข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</p>`;
             } finally {
                 // Delay hiding for a brief moment to show success/error message
                 setTimeout(() => {
                     loadingOverlay.style.display = 'none';
-                }, 1000); // Hide after 1 second
+                }, 1500); // Hide after 1.5 seconds
                 // Always render and update summary after attempting to load
                 renderCalendar();
                 updateSummary();
@@ -697,12 +733,13 @@
             console.log("saveOtData: กำลังบันทึกข้อมูล...");
             if (!window.isFirebaseInitialized || !window.userId) {
                 console.warn("saveOtData: Firebase ยังไม่พร้อมหรือ User ID ไม่มี. จะไม่บันทึกข้อมูล.");
-                loadingOverlay.textContent = "ไม่สามารถบันทึกได้ (Firebase ไม่พร้อม)";
-                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1000);
+                loadingOverlay.innerHTML = '<p>ไม่สามารถบันทึกได้ (Firebase ไม่พร้อม)</p>';
+                loadingOverlay.style.display = 'flex';
+                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1500);
                 return;
             }
             loadingOverlay.style.display = 'flex'; // Show saving overlay
-            loadingOverlay.textContent = 'กำลังบันทึกข้อมูล...';
+            loadingOverlay.innerHTML = '<div class="loading-spinner"></div><p>กำลังบันทึกข้อมูล...</p>';
             try {
                 // Use the global 'appId' variable here
                 const docRef = window.doc(window.db, `artifacts/${appId}/users/${window.userId}/otTrackerData/mainData`);
@@ -715,15 +752,15 @@
                 console.log("saveOtData: พยายามบันทึกเอกสารไปที่:", docRef.path, "ข้อมูล:", dataToSave);
                 await window.setDoc(docRef, dataToSave, { merge: true }); // Save the entire otData object
                 console.log("saveOtData: บันทึกข้อมูลไปที่ Firestore สำเร็จ.");
-                loadingOverlay.textContent = "บันทึกข้อมูลสำเร็จ!";
+                loadingOverlay.innerHTML = '<p>บันทึกข้อมูลสำเร็จ!</p>';
             } catch (error) {
                 console.error("saveOtData: ข้อผิดพลาดในการบันทึกข้อมูลไปที่ Firestore:", error);
-                loadingOverlay.textContent = `ข้อผิดพลาดในการบันทึก: ${error.message}`;
+                loadingOverlay.innerHTML = `<p>ข้อผิดพลาดในการบันทึก: ${error.message}</p>`;
             } finally {
                 // Delay hiding for a brief moment to show success/error message
                 setTimeout(() => {
                     loadingOverlay.style.display = 'none';
-                }, 1000); // Hide after 1 second
+                }, 1500); // Hide after 1.5 seconds
             }
         }
 
@@ -1154,4 +1191,3 @@
     </script>
 </body>
 </html>
-
