@@ -437,6 +437,11 @@
                         ลบโอทีวันนี้
                     </button>
                 </div>
+                <div class="mt-6">
+                    <button id="saveAllDataButton" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
+                        บันทึกข้อมูลทั้งหมด
+                    </button>
+                </div>
             </div>
 
             <!-- Summary Section -->
@@ -605,6 +610,7 @@
         const hoursInput = document.getElementById('hoursInput');
         const addOtButton = document.getElementById('addOtButton');
         const clearOtDayButton = document.getElementById('clearOtDayButton');
+        const saveAllDataButton = document.getElementById('saveAllDataButton'); // New button
         const summaryHours1_5 = document.getElementById('summaryHours1_5');
         const summaryHours2 = document.getElementById('summaryHours2');
         const summaryHours3 = document.getElementById('summaryHours3');
@@ -1118,6 +1124,11 @@
             } else {
                 alert('ไม่มีโอทีสำหรับวันที่เลือกที่จะลบ');
             }
+        });
+
+        // New event listener for the "Save All Data" button
+        saveAllDataButton.addEventListener('click', async () => {
+            await saveOtData(); // Explicitly call save function
         });
 
         // Salary input change handler (recalculate earnings when salary changes)
