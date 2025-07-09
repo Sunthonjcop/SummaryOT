@@ -277,7 +277,7 @@
 
             try {
                 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_API_KEY") || !firebaseConfig.projectId || firebaseConfig.projectId.includes("YOUR_PROJECT_ID")) {
-                    const msg = "ข้อผิดพลาด: การตั้งค่า Firebase ไม่ถูกต้องหรือไม่ได้ระบุ. โปรดตรวจสอบ apiKey และ projectId.";
+                    const msg = "ข้อผิดพลาด: การตั้งค่า Firebase ไม่ถูกต้อง. โปรดตรวจสอบ apiKey และ projectId.";
                     console.error("Firebase:", msg);
                     document.getElementById('loadingOverlay').innerHTML = `<p>${msg}</p>`;
                     return;
@@ -316,49 +316,6 @@
                 setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 3000);
             }
         }
-
-        let currentYear, currentMonth;
-        let selectedDate = null;
-        let otData = {};
-        let selectedOtRate = null;
-        let selectedShift = null;
-
-        const calendarEl = document.getElementById('calendar');
-        const currentMonthYearEl = document.getElementById('currentMonthYear');
-        const prevMonthBtn = document.getElementById('prevMonth');
-        const nextMonthBtn = document.getElementById('nextMonth');
-        const selectedDateDisplayEl = document.getElementById('selectedDateDisplay');
-        const salaryInput = document.getElementById('salaryInput');
-        const shiftButtons = document.getElementById('shiftButtons');
-        const dailyOtEntriesEl = document.getElementById('dailyOtEntries');
-        const otRateButtons = document.getElementById('otRateButtons');
-        const hoursInput = document.getElementById('hoursInput');
-        const addOtButton = document.getElementById('addOtButton');
-        const clearOtDayButton = document.getElementById('clearOtDayButton');
-        const saveAllDataButton = document.getElementById('saveAllDataButton');
-        const summaryHours1_5 = document.getElementById('summaryHours1_5');
-        const summaryHours2 = document.getElementById('summaryHours2');
-        const summaryHours3 = document.getElementById('summaryHours3');
-        const nightShiftDaysCountEl = document.getElementById('nightShiftDaysCount');
-        const otMealAllowanceDaysCountEl = document.getElementById('otMealAllowanceDaysCount');
-        const earnings1_5 = document.getElementById('earnings1_5');
-        const earnings2 = document.getElementById('earnings2');
-        const earnings3 = document.getElementById('earnings3');
-        const totalOtEarningsEl = document.getElementById('totalOtEarnings');
-        const nightShiftAllowanceEl = document.getElementById('nightShiftAllowance');
-        const otMealAllowanceEl = document.getElementById('otMealAllowance');
-        const attendanceBonusInput = document.getElementById('attendanceBonusInput');
-        const regularMealAllowanceInput = document.getElementById('regularMealAllowanceInput');
-        const totalIncomeSalaryEl = document.getElementById('totalIncomeSalary');
-        const totalIncomeOtEarningsEl = document.getElementById('totalIncomeOtEarnings');
-        const totalIncomeNightShiftAllowanceEl = document.getElementById('totalIncomeNightShiftAllowance');
-        const totalIncomeOtMealAllowanceEl = document.getElementById('totalIncomeOtMealAllowance');
-        const grandTotalIncomeEl = document.getElementById('grandTotalIncome');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-
-        const today = new Date();
-        currentYear = today.getFullYear();
-        currentMonth = today.getMonth();
 
         async function loadOtData() {
             if (!isFirebaseInitialized || !userId) {
@@ -423,7 +380,50 @@
             }
         }
 
-        function renderCalendar() {
+        let currentYear, currentMonth;
+        let selectedDate = null;
+        let otData = {};
+        let selectedOtRate = null;
+        let selectedShift = null;
+
+        const calendarEl = document.getElementById('calendar');
+        const currentMonthYearEl = document.getElementById('currentMonthYear');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const selectedDateDisplayEl = document.getElementById('selectedDateDisplay');
+        const salaryInput = document.getElementById('salaryInput');
+        const shiftButtons = document.getElementById('shiftButtons');
+        const dailyOtEntriesEl = document.getElementById('dailyOtEntries');
+        const otRateButtons = document.getElementById('otRateButtons');
+        const hoursInput = document.getElementById('hoursInput');
+        const addOtButton = document.getElementById('addOtButton');
+        const clearOtDayButton = document.getElementById('clearOtDayButton');
+        const saveAllDataButton = document.getElementById('saveAllDataButton');
+        const summaryHours1_5 = document.getElementById('summaryHours1_5');
+        const summaryHours2 = document.getElementById('summaryHours2');
+        const summaryHours3 = document.getElementById('summaryHours3');
+        const nightShiftDaysCountEl = document.getElementById('nightShiftDaysCount');
+        const otMealAllowanceDaysCountEl = document.getElementById('otMealAllowanceDaysCount');
+        const earnings1_5 = document.getElementById('earnings1_5');
+        const earnings2 = document.getElementById('earnings2');
+        const earnings3 = document.getElementById('earnings3');
+        const totalOtEarningsEl = document.getElementById('totalOtEarnings');
+        const nightShiftAllowanceEl = document.getElementById('nightShiftAllowance');
+        const otMealAllowanceEl = document.getElementById('otMealAllowance');
+        const attendanceBonusInput = document.getElementById('attendanceBonusInput');
+        const regularMealAllowanceInput = document.getElementById('regularMealAllowanceInput');
+        const totalIncomeSalaryEl = document.getElementById('totalIncomeSalary');
+        const totalIncomeOtEarningsEl = document.getElementById('totalIncomeOtEarnings');
+        const totalIncomeNightShiftAllowanceEl = document.getElementById('totalIncomeNightShiftAllowance');
+        const totalIncomeOtMealAllowanceEl = document.getElementById('totalIncomeOtMealAllowance');
+        const grandTotalIncomeEl = document.getElementById('grandTotalIncome');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        const today = new Date();
+        currentYear = today.getFullYear();
+        currentMonth = today.getMonth();
+
+        async function renderCalendar() {
             calendarEl.innerHTML = `
                 <div class="calendar-header">อาทิตย์</div>
                 <div class="calendar-header">จันทร์</div>
